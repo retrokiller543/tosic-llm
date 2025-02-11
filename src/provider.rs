@@ -9,7 +9,7 @@ pub enum MaybeStream<T, ST: Stream> {
     Stream(ST),
 }
 
-#[derive(Debug, Clone, AsRef, AsMut, Deref, DerefMut, From)]
+#[derive(Debug, Clone, Copy, AsRef, AsMut, Deref, DerefMut, From)]
 pub struct LlmProvider<T> {
     inner: T,
 }
