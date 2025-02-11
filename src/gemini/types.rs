@@ -1,14 +1,13 @@
 // tosic_llm/src/gemini/types.rs
 
+use crate::types::Bytes;
 use crate::types::Role;
 use crate::utils::SingleOrMultiple;
 use derive_more::{Display, From, FromStr};
 use serde::{Deserialize, Serialize};
-use tosic_utils::wrap_external_type;
 use url::Url;
 use utoipa::openapi::{KnownFormat, RefOr, Schema, SchemaFormat};
 use utoipa::{PartialSchema, ToSchema, openapi};
-use crate::types::Bytes;
 
 #[derive(
     Debug,
@@ -49,7 +48,7 @@ pub struct GeminiContent {
 impl GeminiContent {
     pub fn new(role: Option<Role>, part: impl Into<GeminiPart>) -> Self {
         Self {
-            role: role.map(Into::into),
+            role,
             parts: vec![part.into()],
         }
     }
@@ -59,7 +58,7 @@ impl GeminiContent {
         parts: impl IntoIterator<Item = impl Into<GeminiPart>>,
     ) -> Self {
         Self {
-            role: role.map(Into::into),
+            role,
             parts: parts.into_iter().map(Into::into).collect(),
         }
     }
@@ -160,4 +159,3 @@ pub enum GeminiCodeOutcome {
 pub enum GeminiCodeLanguage {
     Python,
 }
-

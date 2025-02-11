@@ -1,30 +1,36 @@
 // tosic_llm/src/gemini/mod.rs
 
-mod types;
 mod impls;
+mod types;
 
+use crate::error::LlmError;
+use crate::traits::LlmClient;
 use crate::utils::SingleOrMultiple;
-use derive_more::Display;
+use bytes::Bytes;
+use derive_more::{AsMut, AsRef, Display, From};
 use futures_util::{Stream, TryStreamExt};
 use reqwest::{Client, Response};
 use serde::Serialize;
 use serde_json::Value;
 use std::sync::LazyLock;
-use bytes::Bytes;
-use tokio_stream::StreamExt;
 use tosic_utils::env::env_util;
 pub use types::*;
 use url::Url;
-use crate::error::LlmError;
-use crate::traits::LlmClient;
 
-const GEMINI_BASE_URL: &str = "https://generativelanguage.googleapis.com/v1beta";
-const GEMINI_STREAM_ENDPOINT: &str = ":streamGenerateContent";
-const GEMINI_ENDPOINT: &str = ":generateContent";
+pub const GEMINI_BASE_URL: &str = "https://generativelanguage.googleapis.com/v1beta";
+pub const GEMINI_STREAM_ENDPOINT: &str = ":streamGenerateContent";
+pub const GEMINI_ENDPOINT: &str = ":generateContent";
 
+/// Lazily fetched env variable of the API key to Gemini.
+///
+/// Variable: `GEMINI_API_KEY`.
+///
+/// # Panics
+///
+/// Will panic if the environment variable is not set but attempted to initialize.
 pub static GEMINI_KEY: LazyLock<String> = LazyLock::new(|| env_util!("GEMINI_API_KEY"));
 
-#[derive(Display, Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Hash, Display)]
 pub enum GeminiModel {
     #[display("models/gemini-2.0-flash")]
     Gemini2Flash,
@@ -32,17 +38,17 @@ pub enum GeminiModel {
     Gemini2FlashLite,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, AsRef, AsMut, From)]
 pub struct GeminiClient {
     model: GeminiModel,
     client: Client,
 }
 
 impl GeminiClient {
-    pub fn new(model: GeminiModel) -> Self {
-        let client = Client::builder().build().unwrap();
+    pub fn new(model: GeminiModel) -> crate::Result<Self> {
+        let client = Client::builder().build()?;
 
-        Self { model, client }
+        Ok(Self { model, client })
     }
 
     #[tracing::instrument(skip(endpoint, extra_query))]
@@ -93,14 +99,7 @@ impl GeminiClient {
             .send_request(request, (GEMINI_STREAM_ENDPOINT, None))
             .await?;
 
-        let stream = response.bytes_stream()/*.map(|bytes_res| {
-            match bytes_res {
-                Ok(bytes) => {
-                    serde_json::from_slice::<Value>(&bytes).map_err(Into::into)
-                }
-                Err(err) => Err::<_, LlmError>(err.into()),
-            }
-        })*/.map_err(Into::into);
+        let stream = response.bytes_stream().map_err(Into::into);
 
         Ok(stream)
     }
@@ -157,7 +156,7 @@ impl GeminiClient {
 }
 
 #[async_trait::async_trait]
-impl<'de> LlmClient<'de> for GeminiClient {
+impl LlmClient for GeminiClient {
     type Error = LlmError;
     type Input = Vec<GeminiContent>;
     type Output = Value;
@@ -168,7 +167,10 @@ impl<'de> LlmClient<'de> for GeminiClient {
         self.generate_content_iter(messages).await
     }
 
-    async fn stream_chat_completion(&self, messages: Self::Input) -> Result<impl Stream<Item=Result<Self::StreamedOutput, Self::Error>>, Self::Error> {
+    async fn stream_chat_completion(
+        &self,
+        messages: Self::Input,
+    ) -> Result<impl Stream<Item = Result<Self::StreamedOutput, Self::Error>>, Self::Error> {
         self.stream_generate_content_iter(messages).await
     }
 }

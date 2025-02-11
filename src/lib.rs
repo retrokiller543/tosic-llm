@@ -1,12 +1,12 @@
 // tosic_llm/src/lib.rs
 
-pub use gemini::*;
+pub use provider::*;
 
 pub mod error;
 pub mod gemini;
-mod utils;
+pub mod provider;
 pub mod traits;
 pub mod types;
+mod utils;
 
 type Result<T, E = error::LlmError> = core::result::Result<T, E>;
-
