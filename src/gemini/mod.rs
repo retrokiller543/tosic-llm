@@ -3,7 +3,7 @@
 mod impls;
 mod types;
 
-use crate::error::LlmError;
+use crate::error::{WithContext, LlmError};
 use crate::traits::LlmClient;
 use crate::utils::SingleOrMultiple;
 use bytes::Bytes;
@@ -16,6 +16,7 @@ use std::sync::LazyLock;
 use tosic_utils::env::env_util;
 pub use types::*;
 use url::Url;
+use crate::error_context;
 
 pub const GEMINI_BASE_URL: &str = "https://generativelanguage.googleapis.com/v1beta";
 pub const GEMINI_STREAM_ENDPOINT: &str = ":streamGenerateContent";
@@ -67,8 +68,7 @@ impl GeminiClient {
             "{GEMINI_BASE_URL}/{}{}{query}",
             self.model,
             endpoint.as_ref()
-        ))
-        .map_err(Into::into)
+        )).context(error_context!("Failed to parse endpoint"))
     }
 
     #[tracing::instrument(skip(request, endpoint))]
@@ -83,8 +83,7 @@ impl GeminiClient {
             .post(url)
             .json(&request)
             .send()
-            .await
-            .map_err(Into::into)
+            .await.context(error_context!("Failed to send request"))
     }
 
     async fn stream_generate_content_inner<T: Into<GeminiContent>>(

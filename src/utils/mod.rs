@@ -1,5 +1,7 @@
 // tosic_llm/src/utils.rs
 
+pub mod doc;
+
 use std::vec::IntoIter;
 
 pub enum SingleOrMultiple<T> {

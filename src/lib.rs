@@ -9,4 +9,4 @@ pub mod traits;
 pub mod types;
 mod utils;
 
-type Result<T, E = error::LlmError> = core::result::Result<T, E>;
+pub type Result<T, E = error::LlmError> = core::result::Result<T, E>;
