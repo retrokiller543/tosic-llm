@@ -49,6 +49,7 @@ pub struct LlmProvider<T> {
 }
 
 impl<T: LlmClient> LlmProvider<T> {
+    /// Creates a new provider given the inner [LlmClient]
     #[inline(always)]
     pub fn new(inner: T) -> Self {
         Self { inner }
@@ -74,49 +75,8 @@ impl<T: LlmClient> LlmProvider<T> {
     /// # Examples
     ///
     /// ```
-    /// # use std::error::Error;
-    /// # use derive_more::{Display, Error};
-    /// # use futures_util::Stream;
-    /// # use tosic_llm::{LlmProvider, traits::LlmClient};
-    /// # use serde::{Serialize, Deserialize};
-    /// # use tosic_llm::types::LlmMessages;
-    /// #
-    /// # // Example minimal LlmClient implementation
-    /// # struct SimpleClient;
-    /// # #[derive(Debug, Serialize)]
-    /// # struct SimpleInput(String);
-    ///
-    /// # impl From<LlmMessages> for SimpleInput {
-    /// #
-    /// #     fn from(value: LlmMessages) -> Self {
-    /// #         todo!()
-    /// #     }
-    /// # }
-    /// #
-    /// # #[derive(Debug, Deserialize)]
-    /// # struct SimpleOutput(String);
-    /// # #[derive(Debug, Error, Display)]
-    /// # struct SimpleError;
-    /// # struct SimpleConfig;
-    /// #
-    /// # #[async_trait::async_trait]
-    /// # impl LlmClient for SimpleClient {
-    /// #     type Error = SimpleError;
-    /// #     type Input = SimpleInput;
-    /// #     type Output = SimpleOutput;
-    /// #     type StreamedOutput = String;
-    /// #     type Config = SimpleConfig;
-    /// #
-    /// #     async fn chat_completion(&self, input: Self::Input) -> Result<Self::Output, Self::Error> {
-    /// #         Ok(SimpleOutput("response".to_string()))
-    /// #     }
-    /// #
-    /// #     async fn stream_chat_completion(&self, input: Self::Input)
-    /// #         -> Result<impl Stream<Item = Result<Self::StreamedOutput, Self::Error>>, Self::Error> {
-    /// #         Ok(futures_util::stream::empty())
-    /// #     }
-    /// # }
-    /// #
+    /// # use tosic_llm::LlmProvider;
+    /// # tosic_llm::mocked_llm_client!();
     /// # async fn example() -> Result<(), SimpleError> {
     /// let client = SimpleClient; // Any type implementing LlmClient
     /// let provider = LlmProvider::new(client);
