@@ -1,5 +1,5 @@
-use crate::{GeminiBlob, GeminiContent, GeminiFileData, GeminiPart, GeminiRequest};
 use crate::types::{ImageMessagePart, LlmMessage, LlmMessagePart, LlmMessages};
+use crate::{GeminiBlob, GeminiContent, GeminiFileData, GeminiPart, GeminiRequest};
 
 impl From<LlmMessagePart> for GeminiPart {
     fn from(part: LlmMessagePart) -> Self {
@@ -15,7 +15,7 @@ impl From<LlmMessagePart> for GeminiPart {
                 ImageMessagePart::Base64 { data, media_type } => Self::InlineData {
                     inline_data: GeminiBlob {
                         mime_type: media_type,
-                        data
+                        data,
                     },
                 },
                 ImageMessagePart::Url { url } => Self::FileData {
@@ -25,14 +25,12 @@ impl From<LlmMessagePart> for GeminiPart {
                     },
                 },
             },
-            LlmMessagePart::Audio { data, format } => {
-                Self::InlineData {
-                    inline_data: GeminiBlob {
-                        mime_type: format.to_string(),
-                        data
-                    }
-                }
-            }
+            LlmMessagePart::Audio { data, format } => Self::InlineData {
+                inline_data: GeminiBlob {
+                    mime_type: format.to_string(),
+                    data,
+                },
+            },
         }
     }
 }
@@ -41,9 +39,7 @@ impl From<LlmMessage> for GeminiContent {
     fn from(msg: LlmMessage) -> Self {
         match msg {
             LlmMessage::Text { role, text } => Self::new(Some(role), GeminiPart::Text { text }),
-            LlmMessage::Detailed { role, parts } => {
-                Self::from_iter(Some(role), parts)
-            }
+            LlmMessage::Detailed { role, parts } => Self::from_iter(Some(role), parts),
         }
     }
 }

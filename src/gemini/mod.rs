@@ -1,21 +1,21 @@
 // tosic_llm/src/gemini/mod.rs
 
-mod types;
 mod impls;
+mod types;
 
+use crate::error::LlmError;
+use crate::traits::LlmClient;
 use crate::utils::SingleOrMultiple;
+use bytes::Bytes;
 use derive_more::Display;
 use futures_util::{Stream, TryStreamExt};
 use reqwest::{Client, Response};
 use serde::Serialize;
 use serde_json::Value;
 use std::sync::LazyLock;
-use bytes::Bytes;
 use tosic_utils::env::env_util;
 pub use types::*;
 use url::Url;
-use crate::error::LlmError;
-use crate::traits::LlmClient;
 
 const GEMINI_BASE_URL: &str = "https://generativelanguage.googleapis.com/v1beta";
 const GEMINI_STREAM_ENDPOINT: &str = ":streamGenerateContent";
@@ -92,14 +92,16 @@ impl GeminiClient {
             .send_request(request, (GEMINI_STREAM_ENDPOINT, None))
             .await?;
 
-        let stream = response.bytes_stream()/*.map(|bytes_res| {
-            match bytes_res {
-                Ok(bytes) => {
-                    serde_json::from_slice::<Value>(&bytes).map_err(Into::into)
+        let stream = response
+            .bytes_stream() /*.map(|bytes_res| {
+                match bytes_res {
+                    Ok(bytes) => {
+                        serde_json::from_slice::<Value>(&bytes).map_err(Into::into)
+                    }
+                    Err(err) => Err::<_, LlmError>(err.into()),
                 }
-                Err(err) => Err::<_, LlmError>(err.into()),
-            }
-        })*/.map_err(Into::into);
+            })*/
+            .map_err(Into::into);
 
         Ok(stream)
     }
@@ -167,7 +169,10 @@ impl LlmClient for GeminiClient {
         self.generate_content_iter(messages).await
     }
 
-    async fn stream_chat_completion(&self, messages: Self::Input) -> Result<impl Stream<Item=Result<Self::StreamedOutput, Self::Error>>, Self::Error> {
+    async fn stream_chat_completion(
+        &self,
+        messages: Self::Input,
+    ) -> Result<impl Stream<Item = Result<Self::StreamedOutput, Self::Error>>, Self::Error> {
         self.stream_generate_content_iter(messages).await
     }
 }

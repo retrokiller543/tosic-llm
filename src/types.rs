@@ -1,6 +1,8 @@
 // tosic_llm/src/types.rs
 
-use derive_more::{AsMut, AsRef, Deref, DerefMut, Display, From, Into, IsVariant, TryUnwrap, Unwrap};
+use derive_more::{
+    AsMut, AsRef, Deref, DerefMut, Display, From, Into, IsVariant, TryUnwrap, Unwrap,
+};
 use serde::{Deserialize, Serialize};
 use tosic_utils::wrap_external_type;
 use url::Url;
@@ -12,7 +14,7 @@ wrap_external_type! {
 }
 
 #[derive(
-    Serialize, Deserialize, Debug, Clone, From, Hash, Eq, PartialEq, Ord, PartialOrd, ToSchema, Into
+    Serialize, Deserialize, Debug, Clone, From, Hash, Eq, PartialEq, Ord, PartialOrd, ToSchema, Into,
 )]
 pub struct Blob {
     pub(crate) mime_type: String,
@@ -20,21 +22,20 @@ pub struct Blob {
     pub(crate) data: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd, ToSchema, IsVariant)]
+#[derive(
+    Serialize, Deserialize, Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd, ToSchema, IsVariant,
+)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum LlmMessagePart {
-    Text {
-        text: String,
-    },
+    Text { text: String },
     Image(ImageMessagePart),
-    Audio {
-        data: String,
-        format: MediaFormat
-    },
+    Audio { data: String, format: MediaFormat },
     Blob(Blob),
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd, ToSchema, IsVariant)]
+#[derive(
+    Serialize, Deserialize, Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd, ToSchema, IsVariant,
+)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum ImageMessagePart {
     Base64 {
@@ -43,18 +44,31 @@ pub enum ImageMessagePart {
     },
     Url {
         url: Url,
-    }
+    },
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd, ToSchema, IsVariant,
+#[derive(
+    Serialize,
+    Deserialize,
+    Debug,
+    Clone,
+    Hash,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    ToSchema,
+    IsVariant,
     Unwrap,
-    TryUnwrap, Display)]
+    TryUnwrap,
+    Display,
+)]
 #[serde(rename_all = "lowercase")]
 pub enum MediaFormat {
     #[display("audio/wav")]
     Wav,
     #[display("audio/mpeg")]
-    Mp3
+    Mp3,
 }
 
 #[derive(
@@ -72,7 +86,7 @@ pub enum MediaFormat {
     ToSchema,
     IsVariant,
     Unwrap,
-    TryUnwrap
+    TryUnwrap,
 )]
 pub enum Role {
     #[display("user")]
@@ -81,7 +95,9 @@ pub enum Role {
     Model,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd, ToSchema, IsVariant)]
+#[derive(
+    Serialize, Deserialize, Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd, ToSchema, IsVariant,
+)]
 #[serde(untagged)]
 pub enum LlmMessage {
     Text {
@@ -91,10 +107,28 @@ pub enum LlmMessage {
     Detailed {
         role: Role,
         parts: Vec<LlmMessagePart>,
-    }
+    },
 }
 
-#[derive(AsRef, AsMut, Deref, DerefMut, Serialize, Deserialize, Default, Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd, ToSchema, Into, From)]
+#[derive(
+    AsRef,
+    AsMut,
+    Deref,
+    DerefMut,
+    Serialize,
+    Deserialize,
+    Default,
+    Debug,
+    Clone,
+    Hash,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    ToSchema,
+    Into,
+    From,
+)]
 pub struct LlmMessages(pub Vec<LlmMessage>);
 
-// TODO: Create general configurations that should be exposed at the endpoint level 
+// TODO: Create general configurations that should be exposed at the endpoint level
