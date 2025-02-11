@@ -1,5 +1,5 @@
-use crate::types::{ImageMessagePart, LlmMessage, LlmMessagePart, LlmMessages};
 use crate::gemini::{GeminiBlob, GeminiContent, GeminiFileData, GeminiPart, GeminiRequest};
+use crate::types::{ImageMessagePart, LlmMessage, LlmMessagePart, LlmMessages};
 
 impl From<LlmMessagePart> for GeminiPart {
     fn from(part: LlmMessagePart) -> Self {

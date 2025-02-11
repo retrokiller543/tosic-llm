@@ -22,11 +22,11 @@ pub const GEMINI_STREAM_ENDPOINT: &str = ":streamGenerateContent";
 pub const GEMINI_ENDPOINT: &str = ":generateContent";
 
 /// Lazily fetched env variable of the API key to Gemini.
-/// 
+///
 /// Variable: `GEMINI_API_KEY`.
-/// 
+///
 /// # Panics
-/// 
+///
 /// Will panic if the environment variable is not set but attempted to initialize.
 pub static GEMINI_KEY: LazyLock<String> = LazyLock::new(|| env_util!("GEMINI_API_KEY"));
 

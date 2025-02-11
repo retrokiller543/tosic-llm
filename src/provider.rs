@@ -9,7 +9,9 @@ use std::fmt::Debug;
 ///
 /// * `Static` - Contains a single value of type `T`
 /// * `Stream` - Contains a stream of values implementing the `Stream` trait, does not have to be of type `T`
-#[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Hash, Display, IsVariant, Unwrap, TryUnwrap)]
+#[derive(
+    Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Hash, Display, IsVariant, Unwrap, TryUnwrap,
+)]
 #[unwrap(ref, ref_mut)]
 #[try_unwrap(ref, ref_mut)]
 pub enum MaybeStream<T, ST: Stream> {
@@ -26,7 +28,22 @@ pub enum MaybeStream<T, ST: Stream> {
 /// # Type Parameters
 ///
 /// * `T` - The underlying LLM client type implementing the `LlmClient` trait
-#[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Hash, Display, AsRef, AsMut, Deref, DerefMut, From)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Hash,
+    Display,
+    AsRef,
+    AsMut,
+    Deref,
+    DerefMut,
+    From,
+)]
 pub struct LlmProvider<T> {
     inner: T,
 }
@@ -56,23 +73,61 @@ impl<T: LlmClient> LlmProvider<T> {
     ///
     /// # Examples
     ///
-    /// ```no_run
-    /// # use tosic_llm::{GeminiClient, GeminiModel};
-    /// # use tosic_llm::provider::LlmProvider;
-    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let client = GeminiClient::new(GeminiModel::Gemini2FlashLite)?; // could be any type that implements `LlmClient`
+    /// ```
+    /// # use std::error::Error;
+    /// # use derive_more::{Display, Error};
+    /// # use futures_util::Stream;
+    /// # use tosic_llm::{LlmProvider, traits::LlmClient};
+    /// # use serde::{Serialize, Deserialize};
+    /// # use tosic_llm::types::LlmMessages;
+    /// #
+    /// # // Example minimal LlmClient implementation
+    /// # struct SimpleClient;
+    /// # #[derive(Debug, Serialize)]
+    /// # struct SimpleInput(String);
+    ///
+    /// # impl From<LlmMessages> for SimpleInput {
+    /// #
+    /// #     fn from(value: LlmMessages) -> Self {
+    /// #         todo!()
+    /// #     }
+    /// # }
+    /// #
+    /// # #[derive(Debug, Deserialize)]
+    /// # struct SimpleOutput(String);
+    /// # #[derive(Debug, Error, Display)]
+    /// # struct SimpleError;
+    /// # struct SimpleConfig;
+    /// #
+    /// # #[async_trait::async_trait]
+    /// # impl LlmClient for SimpleClient {
+    /// #     type Error = SimpleError;
+    /// #     type Input = SimpleInput;
+    /// #     type Output = SimpleOutput;
+    /// #     type StreamedOutput = String;
+    /// #     type Config = SimpleConfig;
+    /// #
+    /// #     async fn chat_completion(&self, input: Self::Input) -> Result<Self::Output, Self::Error> {
+    /// #         Ok(SimpleOutput("response".to_string()))
+    /// #     }
+    /// #
+    /// #     async fn stream_chat_completion(&self, input: Self::Input)
+    /// #         -> Result<impl Stream<Item = Result<Self::StreamedOutput, Self::Error>>, Self::Error> {
+    /// #         Ok(futures_util::stream::empty())
+    /// #     }
+    /// # }
+    /// #
+    /// # async fn example() -> Result<(), SimpleError> {
+    /// let client = SimpleClient; // Any type implementing LlmClient
     /// let provider = LlmProvider::new(client);
     ///
-    /// let input = Vec::new(); // Replace with the actual input type of your client
-    /// 
+    /// // Create input for the LLM
+    /// let input = SimpleInput("What is Rust?".to_string());
+    ///
     /// // Handle static response
-    /// match provider.generate(input, false).await {
-    ///     Ok(maybe_stream) => {
-    ///         if let Ok(response) = maybe_stream.try_unwrap_static() { // a ref or a ref mut could also be unwrapped if ownership is not desired
-    ///             println!("Got response: {:?}", response);
-    ///         }
-    ///     }
-    ///     Err(e) => eprintln!("Error: {}", e),
+    /// let response = provider.generate(input, false).await?;
+    /// if let Ok(output) = response.try_unwrap_static() {
+    ///     println!("Got response: {:?}", output);
     /// }
     /// # Ok(())
     /// # }
