@@ -11,7 +11,6 @@ use serde::Serialize;
 use serde_json::Value;
 use std::sync::LazyLock;
 use bytes::Bytes;
-use tokio_stream::StreamExt;
 use tosic_utils::env::env_util;
 pub use types::*;
 use url::Url;
@@ -157,7 +156,7 @@ impl GeminiClient {
 }
 
 #[async_trait::async_trait]
-impl<'de> LlmClient<'de> for GeminiClient {
+impl LlmClient for GeminiClient {
     type Error = LlmError;
     type Input = Vec<GeminiContent>;
     type Output = Value;

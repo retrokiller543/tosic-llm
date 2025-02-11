@@ -4,7 +4,6 @@ use crate::types::Role;
 use crate::utils::SingleOrMultiple;
 use derive_more::{Display, From, FromStr};
 use serde::{Deserialize, Serialize};
-use tosic_utils::wrap_external_type;
 use url::Url;
 use utoipa::openapi::{KnownFormat, RefOr, Schema, SchemaFormat};
 use utoipa::{PartialSchema, ToSchema, openapi};
