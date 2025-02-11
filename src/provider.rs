@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 use derive_more::{AsMut, AsRef, Deref, DerefMut, From, IsVariant, TryUnwrap, Unwrap};
+use futures_util::Stream;
 use futures_util::stream::LocalBoxStream;
 use crate::traits::LlmClient;
 
@@ -7,6 +8,12 @@ use crate::traits::LlmClient;
 pub enum MaybeStream<T, ST> {
     Static(T),
     Stream(LocalBoxStream<'static, ST>)
+}
+
+#[derive(IsVariant, Unwrap, TryUnwrap)]
+pub enum MaybeStream2<T, ST: Stream> {
+    Static(T),
+    Stream(ST)
 }
 
 impl<T: Debug, ST> Debug for MaybeStream<T, ST> {
@@ -39,6 +46,14 @@ impl<T: LlmClient> LlmProvider<T> {
             Ok(MaybeStream::Stream(Box::pin(self.stream_chat_completion(input).await?)))
         } else {
             Ok(MaybeStream::Static(self.chat_completion(input).await?))
+        }
+    }
+
+    pub async fn generate2(&'static self, input: T::Input, stream: bool) -> Result<MaybeStream2<T::Output, impl Stream<Item = Result<T::StreamedOutput, T::Error>>>, T::Error> {
+        if stream {
+            Ok(MaybeStream2::Stream(self.stream_chat_completion(input).await?))
+        } else {
+            Ok(MaybeStream2::Static(self.chat_completion(input).await?))
         }
     }
 }
