@@ -3,34 +3,15 @@ use derive_more::{AsMut, AsRef, Deref, DerefMut, From, IsVariant, TryUnwrap, Unw
 use futures_util::Stream;
 use std::fmt::Debug;
 
-#[derive(IsVariant, Unwrap, TryUnwrap)]
+#[derive(IsVariant, Unwrap, TryUnwrap, Debug)]
 pub enum MaybeStream<T, ST: Stream> {
     Static(T),
     Stream(ST),
 }
 
-impl<T: Debug, ST: Stream + Debug> Debug for MaybeStream<T, ST> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        match self {
-            MaybeStream::Static(val) => f.debug_tuple("MaybeStream::Static").field(val).finish(),
-            MaybeStream::Stream(stream) => {
-                f.debug_tuple("MaybeStream::Stream").field(stream).finish()
-            }
-        }
-    }
-}
-
-#[derive(Debug, AsRef, AsMut, Deref, DerefMut, From)]
+#[derive(Debug, Clone, AsRef, AsMut, Deref, DerefMut, From)]
 pub struct LlmProvider<T> {
     inner: T,
-}
-
-impl<T: Clone> Clone for LlmProvider<T> {
-    fn clone(&self) -> Self {
-        LlmProvider {
-            inner: self.inner.clone(),
-        }
-    }
 }
 
 impl<T: LlmClient> LlmProvider<T> {
