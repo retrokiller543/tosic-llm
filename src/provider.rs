@@ -39,7 +39,7 @@ impl<T: LlmClient> LlmProvider<T> {
     }
 
     pub async fn generate(
-        &'static self,
+        &self,
         input: T::Input,
         stream: bool,
     ) -> Result<

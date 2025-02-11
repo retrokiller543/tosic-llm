@@ -92,16 +92,7 @@ impl GeminiClient {
             .send_request(request, (GEMINI_STREAM_ENDPOINT, None))
             .await?;
 
-        let stream = response
-            .bytes_stream() /*.map(|bytes_res| {
-                match bytes_res {
-                    Ok(bytes) => {
-                        serde_json::from_slice::<Value>(&bytes).map_err(Into::into)
-                    }
-                    Err(err) => Err::<_, LlmError>(err.into()),
-                }
-            })*/
-            .map_err(Into::into);
+        let stream = response.bytes_stream().map_err(Into::into);
 
         Ok(stream)
     }
