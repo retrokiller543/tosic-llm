@@ -1,6 +1,6 @@
 // tosic_llm/src/lib.rs
 
-pub use gemini::*;
+pub use provider::*;
 
 pub mod error;
 pub mod gemini;

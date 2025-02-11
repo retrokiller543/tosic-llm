@@ -10,6 +10,8 @@ use std::fmt::Debug;
 /// * `Static` - Contains a single value of type `T`
 /// * `Stream` - Contains a stream of values implementing the `Stream` trait, does not have to be of type `T`
 #[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Hash, Display, IsVariant, Unwrap, TryUnwrap)]
+#[unwrap(ref, ref_mut)]
+#[try_unwrap(ref, ref_mut)]
 pub enum MaybeStream<T, ST: Stream> {
     Static(T),
     Stream(ST),
@@ -51,6 +53,30 @@ impl<T: LlmClient> LlmProvider<T> {
     /// # Errors
     ///
     /// Returns an error if either the streaming or non-streaming operation fails
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use tosic_llm::{GeminiClient, GeminiModel};
+    /// # use tosic_llm::provider::LlmProvider;
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let client = GeminiClient::new(GeminiModel::Gemini2FlashLite)?; // could be any type that implements `LlmClient`
+    /// let provider = LlmProvider::new(client);
+    ///
+    /// let input = Vec::new(); // Replace with the actual input type of your client
+    /// 
+    /// // Handle static response
+    /// match provider.generate(input, false).await {
+    ///     Ok(maybe_stream) => {
+    ///         if let Ok(response) = maybe_stream.try_unwrap_static() { // a ref or a ref mut could also be unwrapped if ownership is not desired
+    ///             println!("Got response: {:?}", response);
+    ///         }
+    ///     }
+    ///     Err(e) => eprintln!("Error: {}", e),
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
     #[inline]
     #[tracing::instrument(skip(self, input))]
     pub async fn generate(
