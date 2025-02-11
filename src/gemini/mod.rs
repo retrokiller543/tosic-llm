@@ -7,7 +7,7 @@ use crate::error::LlmError;
 use crate::traits::LlmClient;
 use crate::utils::SingleOrMultiple;
 use bytes::Bytes;
-use derive_more::Display;
+use derive_more::{AsMut, AsRef, Display, From};
 use futures_util::{Stream, TryStreamExt};
 use reqwest::{Client, Response};
 use serde::Serialize;
@@ -17,13 +17,20 @@ use tosic_utils::env::env_util;
 pub use types::*;
 use url::Url;
 
-const GEMINI_BASE_URL: &str = "https://generativelanguage.googleapis.com/v1beta";
-const GEMINI_STREAM_ENDPOINT: &str = ":streamGenerateContent";
-const GEMINI_ENDPOINT: &str = ":generateContent";
+pub const GEMINI_BASE_URL: &str = "https://generativelanguage.googleapis.com/v1beta";
+pub const GEMINI_STREAM_ENDPOINT: &str = ":streamGenerateContent";
+pub const GEMINI_ENDPOINT: &str = ":generateContent";
 
+/// Lazily fetched env variable of the API key to Gemini.
+/// 
+/// Variable: `GEMINI_API_KEY`.
+/// 
+/// # Panics
+/// 
+/// Will panic if the environment variable is not set but attempted to initialize.
 pub static GEMINI_KEY: LazyLock<String> = LazyLock::new(|| env_util!("GEMINI_API_KEY"));
 
-#[derive(Display, Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Hash, Display)]
 pub enum GeminiModel {
     #[display("models/gemini-2.0-flash")]
     Gemini2Flash,
@@ -31,17 +38,17 @@ pub enum GeminiModel {
     Gemini2FlashLite,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, AsRef, AsMut, From)]
 pub struct GeminiClient {
     model: GeminiModel,
     client: Client,
 }
 
 impl GeminiClient {
-    pub fn new(model: GeminiModel) -> Self {
-        let client = Client::builder().build().unwrap();
+    pub fn new(model: GeminiModel) -> crate::Result<Self> {
+        let client = Client::builder().build()?;
 
-        Self { model, client }
+        Ok(Self { model, client })
     }
 
     #[tracing::instrument(skip(endpoint, extra_query))]
